@@ -5458,31 +5458,36 @@ void AntiAFK_Action(HWND target)
     if (g_stopThread.load() || !g_isAfkStarted.load()) return;
     if (!target || !IsWindow(target)) return;
 
+    if (GetForegroundWindow() != target) {
+        SetForegroundWindow(target);
+        Sleep(50);
+        if (GetForegroundWindow() != target) return;
+    }
+
+    auto SafeKey = [&](BYTE vk) {
+        if (GetForegroundWindow() != target) return;
+        keybd_event(vk, static_cast<BYTE>(MapVirtualKey(vk, 0)), 0, 0);
+        PreciseSleepMs(g_keyPressDelay.load());
+        keybd_event(vk, static_cast<BYTE>(MapVirtualKey(vk, 0)), KEYEVENTF_KEYUP, 0);
+    };
+
     int action = g_selectedAction.load();
     switch (action)
     {
     case 0: // Space
-        keybd_event(static_cast<BYTE>(VK_SPACE), static_cast<BYTE>(MapVirtualKey(VK_SPACE, 0)), 0, 0);
-        PreciseSleepMs(g_keyPressDelay.load());
-        keybd_event(static_cast<BYTE>(VK_SPACE), static_cast<BYTE>(MapVirtualKey(VK_SPACE, 0)), KEYEVENTF_KEYUP, 0);
+        SafeKey(VK_SPACE);
         break;
     case 1: // W & S
-        keybd_event('W', static_cast<BYTE>(MapVirtualKey('W', 0)), 0, 0);
+        SafeKey('W');
+        if (GetForegroundWindow() != target) break;
         PreciseSleepMs(g_keyPressDelay.load());
-        keybd_event('W', static_cast<BYTE>(MapVirtualKey('W', 0)), KEYEVENTF_KEYUP, 0);
-        PreciseSleepMs(g_keyPressDelay.load());
-        keybd_event('S', static_cast<BYTE>(MapVirtualKey('S', 0)), 0, 0);
-        PreciseSleepMs(g_keyPressDelay.load());
-        keybd_event('S', static_cast<BYTE>(MapVirtualKey('S', 0)), KEYEVENTF_KEYUP, 0);
+        SafeKey('S');
         break;
     case 2: // Zoom
-        keybd_event('I', static_cast<BYTE>(MapVirtualKey('I', 0)), 0, 0);
+        SafeKey('I');
+        if (GetForegroundWindow() != target) break;
         PreciseSleepMs(g_keyPressDelay.load());
-        keybd_event('I', static_cast<BYTE>(MapVirtualKey('I', 0)), KEYEVENTF_KEYUP, 0);
-        PreciseSleepMs(g_keyPressDelay.load());
-        keybd_event('O', static_cast<BYTE>(MapVirtualKey('O', 0)), 0, 0);
-        PreciseSleepMs(g_keyPressDelay.load());
-        keybd_event('O', static_cast<BYTE>(MapVirtualKey('O', 0)), KEYEVENTF_KEYUP, 0);
+        SafeKey('O');
         break;
     default:
         break;
