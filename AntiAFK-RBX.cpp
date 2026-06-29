@@ -19180,13 +19180,15 @@ void main_thread(bool arg_tray)
 
                     if (!GetWindowInstanceSetting_AntiAfk(w)) continue;
 
+                    bool wasVisible = IsWindowVisible(w) != FALSE;
                     bool wasMinimized = IsIconic(w);
-                    if (wasMinimized)
-                        ShowWindow(w, SW_RESTORE);
+                    if (!wasVisible) ShowWindow(w, SW_SHOW);
+                    else if (wasMinimized) ShowWindow(w, SW_RESTORE);
 
                     SetForegroundWindow(w);
                     if (g_stopThread.load() || !g_isAfkStarted.load()) {
-                        if (wasMinimized) ShowWindow(w, SW_MINIMIZE);
+                        if (!wasVisible) ShowWindow(w, SW_HIDE);
+                        else if (wasMinimized) ShowWindow(w, SW_MINIMIZE);
                         cancelPendingAction = true;
                         break;
                     }
@@ -19200,7 +19202,8 @@ void main_thread(bool arg_tray)
                     }
 
                     if (g_stopThread.load() || !g_isAfkStarted.load()) {
-                        if (wasMinimized) ShowWindow(w, SW_MINIMIZE);
+                        if (!wasVisible) ShowWindow(w, SW_HIDE);
+                        else if (wasMinimized) ShowWindow(w, SW_MINIMIZE);
                         cancelPendingAction = true;
                         break;
                     }
@@ -19214,7 +19217,8 @@ void main_thread(bool arg_tray)
                         anyActionPerformed = true;
                     }
                     if (cancelPendingAction) {
-                        if (wasMinimized) ShowWindow(w, SW_MINIMIZE);
+                        if (!wasVisible) ShowWindow(w, SW_HIDE);
+                        else if (wasMinimized) ShowWindow(w, SW_MINIMIZE);
                         break;
                     }
                     if (GetWindowInstanceSetting_Reset(w, g_autoReset.load())) {
@@ -19225,13 +19229,14 @@ void main_thread(bool arg_tray)
                         }
                     }
                     if (cancelPendingAction) {
-                        if (wasMinimized) ShowWindow(w, SW_MINIMIZE);
+                        if (!wasVisible) ShowWindow(w, SW_HIDE);
+                        else if (wasMinimized) ShowWindow(w, SW_MINIMIZE);
                         break;
                     }
                     Sleep(g_postActionDelay.load());
 
-                    if (wasMinimized)
-                        ShowWindow(w, SW_MINIMIZE);
+                    if (!wasVisible) ShowWindow(w, SW_HIDE);
+                    else if (wasMinimized) ShowWindow(w, SW_MINIMIZE);
 
                     if (g_multiInstanceInterval.load() > 0 && i < wins.size() - 1) {
                         if (g_stopThread.load() || !g_isAfkStarted.load()) {
