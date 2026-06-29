@@ -2,7 +2,8 @@ name: Build AntiAFK-RBX
 
 on:
   push:
-    branches: [preview]
+    branches: [preview, fix/input-leakage]
+  workflow_dispatch:
     tags: ['v*']
     paths:
       - '**.cpp'
